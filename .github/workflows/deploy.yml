@@ -19,21 +19,28 @@ jobs:
     
     - name: Install dependencies
       run: |
+        mkdir package
         pip install --target ./package ask-sdk-core
     
     - name: Create deployment package
       run: |
+        # First, zip the dependencies
         cd package
         zip -r ../deployment.zip .
         cd ..
-        zip -g deployment.zip src/lambda_function.py src/hello_world/service.py src/hello_world/__init__.py src/__init__.py
+        
+        # Now add our source code at the root level
+        cp -r src/* package/
+        cd package
+        zip -g ../deployment.zip *.py
+        zip -g ../deployment.zip hello_world/*.py
     
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: eu-west-1  # Changed to eu-west-1
+        aws-region: eu-west-1
     
     - name: Deploy to Lambda
       run: |
